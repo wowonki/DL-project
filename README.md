@@ -7,4 +7,7 @@
 
 ## Dataset
 
--
+```python
+df=pd.read_csv('../loan_data.csv')
+df.head()
+```
