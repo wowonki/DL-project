@@ -1,18 +1,22 @@
-# 개인 특성으로 신용 대출 수요 예측하기
+# 개인 특성으로 대출 상환 예측하기
 작성자: 이원기, 경제금융학부, dnjs2658@naver.com
 
 ## Proposal
 
-- 최근 개인 신용대출이 많이 늘었습니다. 코로나 사태로 인해서 개개인의 생활고가 심해진 탓도 분명 있겠지만,  
-불어오는 투자 열풍에 소위 '빚투' 라고 불리는 '빚을 지어 투자' 하는 행태가 늘어난 영향도 무시하지 못 할 것입니다.  
-대출을 받을 때 여신자와 수신자는 서로간의 정보의 불균형 상태에 빠지게 됩니다.  
-수신자가 알 수 있는 것은 금리와 상환일 등 피상적인 정보 뿐이고,  
-여신자가 알 수 있는 것도 개개인이 입력한 개인정보 정도 밖에 없습니다.  
-이 상황에서 수신자는 자신의 조건과 꼭 맞는 대출상품을 찾는데 어려움이 있고,  
-여신자 입장에서도 좋은 대출상품을 맞는 고객을 찾는데에 어려움을 느낍니다.  
-그래서 이번 프로젝트를 통해 고객 개개인의 특성을 알 때 최적의 대출상품을 추천하기 위해  
-기본이 되는 신용대출 수요를 파악하는 모델을 만들고,  
-이를 발전시켜 범기업적 측면에서 개개인에게 상품을 추천해주는 모델까지 개발하고 싶습니다.
+2022년 현재까지 코로나 사태로 인해서 빚어진 개개인의 생활고와  
+투자 열풍으로 인한 '빚투' 라고 불리는 '빚을 지어 투자' 하는 행태로 인해  
+개인 신용대출 규모가 상당히 커졌다.   
+
+대출을 받은 수신자는 신용을 바탕으로 대출금을 받는 대신  
+만기가 되면 여신자에게 대출금을 상환해야 하는 의무를 진다.  
+보통의 경우에는 만기에 맞게 대출금을 상환하지만, 아닌 경우도 존재한다.  
+만기가 도래했을 때 갚을 대출금이 부족하거나, 심한 경우 파산을 신청해  
+채무를 변제받는 경우도 있다.  
+이 경우에 신용을 바탕으로 금전을 빌려준 여신자가 부담을 떠안게 된다.  
+
+때문에 정보 불균형으로 인해 여신자에게 발생하는 비용을 최소화시키기 위해서  
+고객 개개인의 특성을 알 때 여신자가 수신자의 채무 불이행 여부를 예측해 보고자 한다.
+
 
 ## Dataset
 
@@ -31,52 +35,212 @@ df.head()
 
 데이터의 구체적인 내용은 다음과 같다
 ```
-feature:
-  id: 자료 인덱스 넘버
-  age: 고객의 나이
-  experience: 신용대출 횟수
-  income: 고객의 연 수입
-  zip_code:
-  family: 가족 구성원 수(본인 포함)
-  cc_avg:
-  education; 1: high school graduate, 2: college graduate, 3: university graduate
-  martage: 현재 저당잡힌 액수
-  securities_account: 증권계좌보유여부
-  cd_account: CD계좌보유여부
-  credit_card: 신용카드보유여부
-  
-target:
-  personal_loan: 대출수요
-```
+credit.policy: LendingClub.com에 의거한 신용평가기준 만족여부(1: 만족, 0: 불만족)
+purpose: 대출의 목적
+int.rate: 대출 금리
+installment: 수신자가 지불해야 하는 월별 할부금
+log.annual.inc: 수신자 연봉의 로그값
+dti: 부채-수입 비율
+fico: FICO에 의거한 신용점수
+days.with.cr.line: 수신자에게 신용 한도액이 있었던 일 수
+revol.bal: 수신자의 회전 잔액
+revol.util: 수신자의 회전 회선 이용률
+inq.last.6mths: 최근 6개월 동안 여신자의 대출 조회 수
+delinq.2yrs : 지난 2년 동안 수신자가 지불 기한을 30일 이상 넘긴 횟수
+pub.rec: 수신자의 부정적인 공적 기록 수 (탈세 기록, 전과 등)
 
+not.fully.paid: 수신자의 채무 불이행 여부 (1: 불이행, 0:이행)
+```
+### 데이터 개요
+```python
+df.head()
+```
 ### 결측치 확인
 ```python
 df.info()
 ```
-
+[사진]  
 결측치가 없는 것을 확인할 수 있다.
 
 ### 시각화
-```
-plt.figure(figsize=(20,20))
-sns.heatmap(df.corr(), vmin=-1, cmap="plasma_r", annot=True)
-```
-이를 보면 age와 experience feature간의 상관관계가 과도하게 높은 것을 알 수 있다.
-저정도로 높은 선형관계를 가지는 데이터가 있을 경우 분석에 방해가 될 수 있기에
-age feature를 제거하도록 한다.
-```
-df.drop(['age'], axis=1, inplace=True)
-````
-
-```
-plt.figure(figsize=(8,5))
-sns.countplot('securities_account', data = df, color='#00ddff', saturation=0.9)
+```python
+# 데이터 분석을 위한 분류
+categorical_columns = ['credit.policy','purpose', 'inq.last.6mths', 'delinq.2yrs', 'pub.rec']
+numerical_columns = ['int.rate', 'installment', 'log.annual.inc', 'dti', 'fico', 'days.with.cr.line', 'revol.bal', 'revol.util']
 ```
 
-```
-sns.scatterplot(x = 'personal_loan', y = 'inocme', data = df)
+#### Categorical Data
 
-print(df[df['personal_loan']==0]['income'].mean())
-print(df[df['personal_loan']==1]['income'].mean())
+```python
+# categorical한 데이터들을 for문을 통해 subplot으로 나타내어 한 번에 확인
+fig,axes = plt.subplots(3,2,figsize=(15,15))
+for idx,cat_col in enumerate(categorical_columns):
+    row,col = idx//2,idx%2
+    sns.countplot(x=cat_col,data=df,hue='not.fully.paid',ax=axes[row,col])
 ```
-대출을 받는 사람들의 평균 소득이 그렇지 않은 사람들보다 높다는 유의미한 결과를 얻을 수 있다.
+[사진]  
+
+- credit policy가 0일때 채무 불이행 비율이 상당히 높다  
+- purpose 에 따라 상환 비율이 크게 바뀌므로 확인해볼 필요가 있다.  
+- inq.last.6mth가 커질 수록 채무 불이행 비율이 높아진다. / 구간을 나눠 살펴볼 필요가 있다.  
+- delinq.2ys는 큰 상관관계를 보이진 않는다.  
+- pub.rec도 큰 상관관계를 보이진 않는다.
+
+#### Numerical Data
+
+```python
+fig,axes = plt.subplots(4,2,figsize=(17,20))
+for idx,cat_col in enumerate(numerical_columns):
+    row,col = idx//2,idx%2
+    sns.boxplot(y=cat_col,data=df,x='not.fully.paid',ax=axes[row, col])
+```
+[사진]  
+
+- int.rate가 높아질 수록 채무 불이행 비율이 높아진다.
+- fico가 낮아질 수록 채무불이행 비율이 높아진다.
+- 그 외에는 크게 유의한 점 없으나 re.vol.bal 그래프의 가시성이 떨어져 다른 plot을 사용해본다.
+
+```python
+sns.ecdfplot(x='revol.bal',data=df,hue='not.fully.paid')
+```
+[사진]  
+
+revol.bal의 누적 분포를 그려보았다.  
+채무 불이행 여부에 큰 영향이 없어 보인다.
+
+
+int.rate와 채무불이행 여부의 관계를 다른 plot으로 살펴본다.
+```
+sns.histplot(x='int.rate',data=df,hue='not.fully.paid')
+```
+[사진]  
+
+boxplot에서 파악한 내용을 histplot으로 구체적으로 확인해보았다.
+int.rate가 커질 수록 연체자 비율이 높아진다는 사실을 구체화 했다.
+
+
+```python
+sns.heatmap(df.corr())
+```
+not.fully.paid와 연관 있어 보이는 것은 creditpolicy, fico 정도,
+두 요소를 이용해 새로운 변인을 만들어 본다.  
+
+```python
+fico_dummy = df['fico'] > 700
+df['credit_score'] = df['credit.policy'] + fico_dummy
+df['credit_score']
+sns.countplot(x='credit_score',data=df,hue='not.fully.paid')
+```
+
+[사진]  
+
+LendingClub.com 에서 신용평가기준을 만족하고 fico 점수가 700점이 넘는 사람을 고신용자로,  
+둘 중에 한 조건만 만족시키는 사람을 중신용자로,  
+모두 만족하지 못하는 사람을 저신용자로 분류해 0,1,2로 나타내보았다.  
+신용도가 낮을 수록 채무불이행할 확률이 높다는 사실을 다시 한번 확인하였다.  
+
+
+이번에는 inq.last.6mths와 delinq.2yrs 두 요소를 이용해 새로운 변인을 만들어본다.
+inq.last.6mths는 여신자의 대출조회 수를, delinq.2yrs는 채무자의 연체 횟수를 나타낸다.  
+따라서 여신자의 대출 조회를 4회 이상 받거나, 연체를 1번이라도 했던 사람을 위험군으로 분류해본다.  
+```python
+# 4번 이상 받은 사람을 위험군으로 본다.
+inq_6mth = df['inq.last.6mths'] >= 4
+
+# 1번이라도 받았던 사람을 위험군으로 본다
+del_2yr = df['delinq.2yrs'] != 0
+
+# 6개월 채무 이행 콜을 4번 이상 받았거나, 2년 내에 연채를 한 사람
+df['hazard_score'] = inq_6mth | del_2yr
+df['hazard_score'] = df['hazard_score']*1
+sns.countplot(x='hazard_score',data=df,hue='not.fully.paid')
+```
+[사진]  
+
+마지막으로 int.rate와 installment 요소들을 활용해  
+높은 이자율로 대출을 받은 사람이 많은 월 할부금을 지급해야 할 때  
+채무 불이행 비율이 높아지는지 알아본다.  
+```python
+sns.lmplot('installment','int.rate',data=df,hue='not.fully.paid',palette='coolwarm')
+```
+
+채무불이행 회귀선이 채무 이행 회귀선보다 조금 높게 위치하긴 하지만 크게 유의미하진 않은 듯 하다.  
+
+여기까지 시각화를 바탕으로 분석한 결과, 개인 채무 불이행에 영향을 미치는 주 feature는  
+credit policy, fico, int.rate, credit_score, hazard_score 정도이다.  
+***
+### 의사결정 트리로 예측
+의사결정 트리란 ~~~
+따라서 이 모델을 선정하게 되었다.
+
+desicion tree 분석을 위해 유의해 보이는 데이터 셋을 추출해 새로운 데이터프레임을 만든다
+hazard_score는 구성요소인 dummy columns을 따로 사용한다
+```python
+df['inq_6mth_4'] = (df['inq.last.6mths'] >= 4)*1
+df['del_2yr_once'] = (df['delinq.2yrs'] != 0)*1
+
+valid_col = ['credit.policy', 'int.rate', 'fico', 'credit_score', 'inq_6mth_4', 'del_2yr_once', 'not.fully.paid']
+df2 = df[valid_col]
+df2[['int.rate','fico']].describe()
+```
+
+두 연속적인 feature를 25, 50, 75% 구간으로 4분할 해 더미로 만든다.
+```python
+int_qlist = [0.1039, 0.1221, 0.1407]
+fic_qlist = [682, 707, 737]
+df2['int_dummy'] = 0
+df2['fico_dummy'] = 0
+for i in int_qlist:   
+    cond = df2['int.rate'] >= i
+    df2.loc[cond, 'int_dummy'] += 1
+    
+for i in fic_qlist:   
+    cond = df2['fico'] >= i
+    df2.loc[cond, 'fico_dummy'] += 1
+
+df2.drop(['int.rate', 'fico'], axis=1, inplace=True)
+```
+
+test, train 나누기
+```python
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+
+X=df2.drop('not.fully.paid', axis=1)
+y=df2['not.fully.paid']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33)
+```
+
+모델에 데이터 적용해 학습, 예측하기
+```python
+clf_gini = DecisionTreeClassifier(criterion='gini', max_depth=3, random_state=0)
+clf_gini.fit(X_train, y_train)
+
+y_pred_gini = clf_gini.predict(X_test)
+y_pred_train_gini = clf_gini.predict(X_train)
+```
+
+정확도 
+```python
+from sklearn.metrics import accuracy_score
+
+print('Model accuracy score with criterion gini index: {0:0.4f}'. format(accuracy_score(y_test, y_pred_gini)))
+print('Training-set accuracy score: {0:0.4f}'. format(accuracy_score(y_train, y_pred_train_gini)))
+```
+
+train 셋과 test 셋으로 예측한 결과가 overfit 하지 않고 적절한 수준을 보여준다
+
+그림을 그려 의사결정트리를 살펴본다.  
+```python
+from sklearn import tree
+
+plt.figure(figsize=(12,8))
+tree.plot_tree(clf_gini.fit(X_train, y_train)) 
+```
+
+그림 상 ~는 ~고 ~는  ~이다.
+
+
+지금까지 개인 특성을 이용하여 신용대출 상환 여부를 판단하기 위해 데이터 전처리부터  
+시각화를 통해 feature들의 특성을 파악하고, 새로운 feature를 만들어 기존의 feature들과 함께  
+decision tree로 예측까지 해 보았다.
