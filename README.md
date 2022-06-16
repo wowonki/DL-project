@@ -76,7 +76,7 @@ for idx,cat_col in enumerate(categorical_columns):
     sns.countplot(x=cat_col,data=df,hue='not.fully.paid',ax=axes[row,col])
 ```
 ![first_plot](https://user-images.githubusercontent.com/62041260/174081012-8e252e77-693d-41d4-830b-c66ce827f613.png)  
-![first_plot2](https://user-images.githubusercontent.com/62041260/174081015-024f94e2-e8d2-475f-b8a6-2fc02b43f203.png)
+![first_plot2](https://user-images.githubusercontent.com/62041260/174082903-d5650f55-2f85-49c8-9fc2-c8c03d96f565.png)
 
 - credit policy가 0일때 채무 불이행 비율이 상당히 높다  
 - purpose 에 따라 상환 비율이 크게 바뀌므로 확인해볼 필요가 있다.  
@@ -173,8 +173,12 @@ sns.lmplot('installment','int.rate',data=df,hue='not.fully.paid',palette='coolwa
 credit policy, fico, int.rate, credit_score, hazard_score 정도이다.  
 ***
 ### 의사결정 트리로 예측
-의사결정 트리란 ~~~
-따라서 이 모델을 선정하게 되었다.
+의사결정 트리란 특정한 문제를 해결하기 위해 한 단계씩 내려가면서 0또는 1의 의사결정을 한다.  
+트리는 단계를 내려가며 점점 더 많은 노드들을 만들어 내게 되고, 이 중에서 가장 설명력이 높은  
+노드를 선택하는 것이 의사결정 트리의 골자이다.  
+이 알고리즘은 분류와 회귀 목적 모두에 사용될 수 있는 지도 학습 알고리즘이며,  
+여기서는 신용대출 상환여부 분류를 위해 사용되었다.  
+
 
 desicion tree 분석을 위해 유의해 보이는 데이터 셋을 추출해 새로운 데이터프레임을 만든다
 hazard_score는 구성요소인 dummy columns을 따로 사용한다
@@ -205,7 +209,7 @@ for i in fic_qlist:
 df2.drop(['int.rate', 'fico'], axis=1, inplace=True)
 ```
 
-test, train 나누기
+모델을 적용하기 이전에, 데이터를 테스트셋과 트레인셋으로 분류한다
 ```python
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
@@ -215,7 +219,7 @@ y=df2['not.fully.paid']
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33)
 ```
 
-모델에 데이터 적용해 학습, 예측하기
+지니계수를 기준으로 하는 의사결정모델을 만들고 트레인 셋, 테스트 셋을 적용해 본다.
 ```python
 clf_gini = DecisionTreeClassifier(criterion='gini', max_depth=3, random_state=0)
 clf_gini.fit(X_train, y_train)
@@ -224,12 +228,12 @@ y_pred_gini = clf_gini.predict(X_test)
 y_pred_train_gini = clf_gini.predict(X_train)
 ```
 
-정확도 
+정확도를 출력해본다.
 ```python
 from sklearn.metrics import accuracy_score
 
-print('Model accuracy score with criterion gini index: {0:0.4f}'. format(accuracy_score(y_test, y_pred_gini)))
-print('Training-set accuracy score: {0:0.4f}'. format(accuracy_score(y_train, y_pred_train_gini)))
+print('지니계수를 이용한 테스트셋 정확도: {0:0.4f}'. format(accuracy_score(y_test, y_pred_gini)))
+print('트레이닝셋 정확도: {0:0.4f}'. format(accuracy_score(y_train, y_pred_train_gini)))
 ```
 
 train 셋과 test 셋으로 예측한 결과가 overfit 하지 않고 적절한 수준을 보여준다
@@ -240,11 +244,21 @@ from sklearn import tree
 
 plt.figure(figsize=(12,8))
 tree.plot_tree(clf_gini.fit(X_train, y_train)) 
-```
-
-그림 상 ~는 ~고 ~는  ~이다.
+```  
 
 
 지금까지 개인 특성을 이용하여 신용대출 상환 여부를 판단하기 위해 데이터 전처리부터  
-시각화를 통해 feature들의 특성을 파악하고, 새로운 feature를 만들어 기존의 feature들과 함께  
-decision tree로 예측까지 해 보았다.
+시각화를 통해 feature들의 특성을 파악하고, 새로운 feature를 만들어 분석해보았다.   
+상환여부에 영향을 미치는 요소들은 대출금리, 채무불이행 건수 등이 있었지만,  
+그 중 제일 유의했던 feature들은 credit.policy와 pico로 대표되는 신용점수였다.  
+신용 점수가 낮으면 낮을 수록 채무 불이행 확률이 높아지는, 아주 직관적인 결과다.  
+
+또한 decision tree를 이용해 각 feature들로 예측하는 모델을 적용해보았다.  
+정확도는 약 70~80%를 보여주며 overfitting 하지 않은 유의한 결과를 만들어 냈다.  
+
+한 학기 동안 수업을 들으면서 딥러닝에 관한 교양적 지식도 쌓고  
+코딩을 하는 법도 조금은 배웠다고 생각한다.  
+물론 코딩을 전문적으로 하는 사람들이 본다면 코웃음 칠 정도지만,  
+적어도 내가 하고자 하는 프로젝트에 이용하는 도구로써는 어느 정도 사용할 수 있지 않을까.  
+아무튼 의미있는 한 학기 수업이었다.  
+youtubelink.
