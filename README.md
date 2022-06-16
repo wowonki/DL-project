@@ -1,7 +1,7 @@
 # 개인 특성으로 대출 상환 예측하기
 작성자: 이원기, 경제금융학부, dnjs2658@naver.com
 
-## Proposal
+## 목적
 
 2022년 현재까지 코로나 사태로 인해서 빚어진 개개인의 생활고와  
 투자 열풍으로 인한 '빚투' 라고 불리는 '빚을 지어 투자' 하는 행태로 인해  
@@ -18,7 +18,7 @@
 고객 개개인의 특성을 알 때 여신자가 수신자의 채무 불이행 여부를 예측해 보고자 한다.
 
 
-## Dataset
+## 데이터 셋
 
 ```python
 import pandas as pd
@@ -59,7 +59,7 @@ df.info()
 ![df_info](https://user-images.githubusercontent.com/62041260/174081687-e057ef51-d57a-4035-899f-e0168f5c7167.png)  
 결측치가 없는 것을 확인할 수 있다.
 
-### 시각화
+### 데이터 시각화
 ```python
 # 데이터 분석을 위한 분류
 categorical_columns = ['credit.policy','purpose', 'inq.last.6mths', 'delinq.2yrs', 'pub.rec']
@@ -172,7 +172,7 @@ sns.lmplot('installment','int.rate',data=df,hue='not.fully.paid',palette='coolwa
 여기까지 시각화를 바탕으로 분석한 결과, 개인 채무 불이행에 영향을 미치는 주 feature는  
 credit policy, fico, int.rate, credit_score, hazard_score 정도이다.  
 ***
-### 의사결정 트리로 예측
+## 의사결정 트리로 예측
 의사결정 트리란 특정한 문제를 해결하기 위해 한 단계씩 내려가면서 0또는 1의 의사결정을 한다.  
 트리는 단계를 내려가며 점점 더 많은 노드들을 만들어 내게 되고, 이 중에서 가장 설명력이 높은  
 노드를 선택하는 것이 의사결정 트리의 골자이다.  
@@ -235,6 +235,7 @@ from sklearn.metrics import accuracy_score
 print('지니계수를 이용한 테스트셋 정확도: {0:0.4f}'. format(accuracy_score(y_test, y_pred_gini)))
 print('트레이닝셋 정확도: {0:0.4f}'. format(accuracy_score(y_train, y_pred_train_gini)))
 ```
+![predict_acc](https://user-images.githubusercontent.com/62041260/174087600-8d529222-58f9-423e-9648-4481963eda35.png)  
 
 train 셋과 test 셋으로 예측한 결과가 overfit 하지 않고 적절한 수준을 보여준다
 
@@ -245,7 +246,8 @@ from sklearn import tree
 plt.figure(figsize=(12,8))
 tree.plot_tree(clf_gini.fit(X_train, y_train)) 
 ```  
-
+***  
+## 결론  
 
 지금까지 개인 특성을 이용하여 신용대출 상환 여부를 판단하기 위해 데이터 전처리부터  
 시각화를 통해 feature들의 특성을 파악하고, 새로운 feature를 만들어 분석해보았다.   
@@ -260,5 +262,4 @@ tree.plot_tree(clf_gini.fit(X_train, y_train))
 코딩을 하는 법도 조금은 배웠다고 생각한다.  
 물론 코딩을 전문적으로 하는 사람들이 본다면 코웃음 칠 정도지만,  
 적어도 내가 하고자 하는 프로젝트에 이용하는 도구로써는 어느 정도 사용할 수 있지 않을까.  
-아무튼 의미있는 한 학기 수업이었다.  
-youtubelink.
+아무튼 의미있는 한 학기 수업이었다. 
