@@ -51,15 +51,12 @@ pub.rec: 수신자의 부정적인 공적 기록 수 (탈세 기록, 전과 등)
 
 not.fully.paid: 수신자의 채무 불이행 여부 (1: 불이행, 0:이행)
 ```
-### 데이터 개요
-```python
-df.head()
-```
+
 ### 결측치 확인
 ```python
 df.info()
 ```
-[사진]  
+![df_info](https://user-images.githubusercontent.com/62041260/174081687-e057ef51-d57a-4035-899f-e0168f5c7167.png)  
 결측치가 없는 것을 확인할 수 있다.
 
 ### 시각화
@@ -78,7 +75,8 @@ for idx,cat_col in enumerate(categorical_columns):
     row,col = idx//2,idx%2
     sns.countplot(x=cat_col,data=df,hue='not.fully.paid',ax=axes[row,col])
 ```
-[사진]  
+![first_plot](https://user-images.githubusercontent.com/62041260/174081012-8e252e77-693d-41d4-830b-c66ce827f613.png)  
+![first_plot2](https://user-images.githubusercontent.com/62041260/174081015-024f94e2-e8d2-475f-b8a6-2fc02b43f203.png)
 
 - credit policy가 0일때 채무 불이행 비율이 상당히 높다  
 - purpose 에 따라 상환 비율이 크게 바뀌므로 확인해볼 필요가 있다.  
@@ -94,7 +92,8 @@ for idx,cat_col in enumerate(numerical_columns):
     row,col = idx//2,idx%2
     sns.boxplot(y=cat_col,data=df,x='not.fully.paid',ax=axes[row, col])
 ```
-[사진]  
+![second_plot](https://user-images.githubusercontent.com/62041260/174081018-fa5d09f8-bf1f-4be0-b7a7-cb785969ed30.png)  
+![second_plot2](https://user-images.githubusercontent.com/62041260/174081019-bd93b641-0b4a-4670-b04f-83773c31f29d.png)  
 
 - int.rate가 높아질 수록 채무 불이행 비율이 높아진다.
 - fico가 낮아질 수록 채무불이행 비율이 높아진다.
@@ -103,7 +102,7 @@ for idx,cat_col in enumerate(numerical_columns):
 ```python
 sns.ecdfplot(x='revol.bal',data=df,hue='not.fully.paid')
 ```
-[사진]  
+![cum_plot](https://user-images.githubusercontent.com/62041260/174081024-f38ebf5e-d170-449d-b0eb-97202bfbc14a.png)  
 
 revol.bal의 누적 분포를 그려보았다.  
 채무 불이행 여부에 큰 영향이 없어 보인다.
@@ -113,7 +112,7 @@ int.rate와 채무불이행 여부의 관계를 다른 plot으로 살펴본다.
 ```
 sns.histplot(x='int.rate',data=df,hue='not.fully.paid')
 ```
-[사진]  
+![int_hist](https://user-images.githubusercontent.com/62041260/174081031-a2feb951-c80e-4b06-a49c-649b59fec154.png)  
 
 boxplot에서 파악한 내용을 histplot으로 구체적으로 확인해보았다.
 int.rate가 커질 수록 연체자 비율이 높아진다는 사실을 구체화 했다.
@@ -122,6 +121,8 @@ int.rate가 커질 수록 연체자 비율이 높아진다는 사실을 구체�
 ```python
 sns.heatmap(df.corr())
 ```
+![heatmap](https://user-images.githubusercontent.com/62041260/174081025-beee86ab-08be-42bd-bfae-a448f5daa8ea.png)  
+
 not.fully.paid와 연관 있어 보이는 것은 creditpolicy, fico 정도,
 두 요소를 이용해 새로운 변인을 만들어 본다.  
 
@@ -132,7 +133,7 @@ df['credit_score']
 sns.countplot(x='credit_score',data=df,hue='not.fully.paid')
 ```
 
-[사진]  
+![credit_score](https://user-images.githubusercontent.com/62041260/174081028-e95a4de4-4979-4657-9185-45388fff57a9.png)    
 
 LendingClub.com 에서 신용평가기준을 만족하고 fico 점수가 700점이 넘는 사람을 고신용자로,  
 둘 중에 한 조건만 만족시키는 사람을 중신용자로,  
@@ -140,7 +141,7 @@ LendingClub.com 에서 신용평가기준을 만족하고 fico 점수가 700점�
 신용도가 낮을 수록 채무불이행할 확률이 높다는 사실을 다시 한번 확인하였다.  
 
 
-이번에는 inq.last.6mths와 delinq.2yrs 두 요소를 이용해 새로운 변인을 만들어본다.
+이번에는 inq.last.6mths와 delinq.2yrs 두 요소를 이용해 새로운 변인을 만들어본다.  
 inq.last.6mths는 여신자의 대출조회 수를, delinq.2yrs는 채무자의 연체 횟수를 나타낸다.  
 따라서 여신자의 대출 조회를 4회 이상 받거나, 연체를 1번이라도 했던 사람을 위험군으로 분류해본다.  
 ```python
@@ -155,14 +156,16 @@ df['hazard_score'] = inq_6mth | del_2yr
 df['hazard_score'] = df['hazard_score']*1
 sns.countplot(x='hazard_score',data=df,hue='not.fully.paid')
 ```
-[사진]  
+![hazard_score](https://user-images.githubusercontent.com/62041260/174081036-eebddab0-992b-4d79-b6ca-8f5480ca4872.png)  
 
 마지막으로 int.rate와 installment 요소들을 활용해  
 높은 이자율로 대출을 받은 사람이 많은 월 할부금을 지급해야 할 때  
 채무 불이행 비율이 높아지는지 알아본다.  
+
 ```python
 sns.lmplot('installment','int.rate',data=df,hue='not.fully.paid',palette='coolwarm')
 ```
+![int_install](https://user-images.githubusercontent.com/62041260/174081039-153c5236-9988-4768-93c7-fd582c5017a5.png)  
 
 채무불이행 회귀선이 채무 이행 회귀선보다 조금 높게 위치하긴 하지만 크게 유의미하진 않은 듯 하다.  
 
@@ -183,6 +186,7 @@ valid_col = ['credit.policy', 'int.rate', 'fico', 'credit_score', 'inq_6mth_4', 
 df2 = df[valid_col]
 df2[['int.rate','fico']].describe()
 ```
+![int_fico](https://user-images.githubusercontent.com/62041260/174081049-bac69626-000a-47ff-a99b-b24f287f914d.png)  
 
 두 연속적인 feature를 25, 50, 75% 구간으로 4분할 해 더미로 만든다.
 ```python
