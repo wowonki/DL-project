@@ -266,4 +266,4 @@ tree.plot_tree(clf_gini.fit(X_train, y_train))
 적어도 내가 하고자 하는 프로젝트에 이용하는 도구로써는 어느 정도 사용할 수 있지 않을까.  
 아무튼 의미있는 한 학기 수업이었다. 
 
-https://youtu.be/P5tkpmTbJnc 
+https://youtu.be/EKwtuZmMNGU
