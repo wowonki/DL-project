@@ -246,6 +246,8 @@ from sklearn import tree
 plt.figure(figsize=(12,8))
 tree.plot_tree(clf_gini.fit(X_train, y_train)) 
 ```  
+![deci_tree](https://user-images.githubusercontent.com/62041260/174080999-7c37367b-6251-44a7-b562-aec0689f406a.png)  
+
 ***  
 ## 결론  
 
